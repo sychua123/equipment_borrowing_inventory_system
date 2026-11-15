@@ -14,6 +14,7 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        // The home page sends the visitor to the ticket list
+        $response->assertRedirect('/tickets');
     }
 }
