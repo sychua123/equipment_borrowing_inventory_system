@@ -14,12 +14,15 @@ return new class extends Migration {
             // The user who submitted the ticket
             $table->foreignId('user_id')->constrained();
             // Equipment belongs to Module 1, so we store the ID only (no foreign key)
-            $table->unsignedBigInteger('equipment_id')->nullable();
+            $table->unsignedBigInteger('equipment_id')->nullable()->index();
             $table->string('category', 30);
             $table->string('priority', 10);
             $table->string('title', 120);
             $table->text('description');
-            $table->string('status', 20)->default('Open');
+            $table->string('status', 20)->default('Open')->index();
+            // When the Admin marked it Resolved (used for auto-close and handling time)
+            $table->timestamp('resolved_at')->nullable();
+            $table->timestamp('closed_at')->nullable();
             $table->timestamps();
         });
     }

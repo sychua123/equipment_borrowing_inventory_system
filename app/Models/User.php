@@ -31,13 +31,22 @@ class User extends Authenticatable
         ];
     }
 
-    // Module 4 (Lai Chee Kit): a user has many tickets
+    // ===== Module 4 (Lai Chee Kit) =====
+    // The User model belongs to Module 1. Module 4 needs only the three methods below.
+
+    // A user has many tickets
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
     }
 
-    // Module 4 (Lai Chee Kit): Admin = Inventory Officer
+    // The bell notifications of this user (newest first)
+    public function ticketNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->latest();
+    }
+
+    // Admin = Inventory Officer
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

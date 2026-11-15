@@ -1,32 +1,103 @@
 <?php
 // Author: Lai Chee Kit
-// Module 4: gets equipment data, which is owned by Module 1.
-// TEMPORARY: returns a fixed list. In Week 5 this class will call Module 1's REST API instead.
+// Module 4: reads equipment data from Module 1's web service.
+// Equipment belongs to Module 1, so Module 4 never reads the equipment table directly.
 
 namespace App\Services;
 
+use App\Services\Api\ApiResult;
+use App\Services\Api\ModuleApiClient;
+
 class EquipmentService
 {
-    /** @return array<int, array{id:int, asset_tag:string, name:string}> */
-    public function all(): array
+    // Remember the list for the rest of this page load
+    private ?ApiResult $listResult = null;
+
+    public function __construct(private ModuleApiClient $client)
     {
-        return [
-            ['id' => 1, 'asset_tag' => 'LAP-0001', 'name' => 'Dell Latitude 5440 Laptop'],
-            ['id' => 2, 'asset_tag' => 'PRJ-0001', 'name' => 'Epson EB-X51 Projector'],
-            ['id' => 3, 'asset_tag' => 'CAM-0001', 'name' => 'Canon EOS 90D Camera'],
-            ['id' => 4, 'asset_tag' => 'LAB-0001', 'name' => 'Digital Oscilloscope'],
-        ];
     }
 
-    /** Find one equipment item by ID, or null when it does not exist. */
+    // Every equipment item, including Retired ones (old tickets still need their names)
+    public function all(): ApiResult
+    {
+        return $this->listResult ??= $this->client->get('module1', 'equipment');
+    }
+
+    /** Equipment as simple rows: id, asset_tag, name, category, location, status */
+    public function list(): array
+    {
+        return array_map([$this, 'mapEquipment'], $this->all()->data);
+    }
+
+    // For the "submit ticket" dropdown: Retired equipment is hidden
+    public function selectable(): array
+    {
+        return array_values(array_filter($this->list(), fn (array $e) => $e['status'] !== 'Retired'));
+    }
+
+    /** Find one equipment item by ID, or null when it is unknown or Module 1 is unavailable. */
     public function find(?int $id): ?array
     {
-        foreach ($this->all() as $equipment) {
+        foreach ($this->list() as $equipment) {
             if ($equipment['id'] === $id) {
                 return $equipment;
             }
         }
 
         return null;
+    }
+
+    // Text to show for an equipment ID, for example "PRJ-0001 · Epson Projector (retired)"
+    public function label(?int $id): string
+    {
+        if ($id === null) {
+            return 'None';
+        }
+
+        $equipment = $this->find($id);
+
+        if ($equipment === null) {
+            return "Equipment #{$id} (details unavailable)";
+        }
+
+        return $equipment['asset_tag'].' · '.$equipment['name'].($equipment['status'] === 'Retired' ? ' (retired)' : '');
+    }
+
+    // Stock per category: category, total, available, borrowed, under_maintenance, lost, retired
+    public function stockSummary(): ApiResult
+    {
+        return $this->client->get('module1', 'stock_summary');
+    }
+
+    public function stockRows(ApiResult $result): array
+    {
+        return array_map([$this, 'mapStock'], $result->data);
+    }
+
+    // ----- PLACEHOLDER: field names of Module 1's JSON. Change the right-hand side only. -----
+
+    private function mapEquipment(array $row): array
+    {
+        return [
+            'id' => (int) ($row['equipmentID'] ?? 0),
+            'asset_tag' => (string) ($row['assetTag'] ?? ''),
+            'name' => (string) ($row['name'] ?? ''),
+            'category' => (string) ($row['category'] ?? ''),
+            'location' => (string) ($row['location'] ?? ''),
+            'status' => (string) ($row['status'] ?? ''),
+        ];
+    }
+
+    private function mapStock(array $row): array
+    {
+        return [
+            'category' => (string) ($row['category'] ?? ''),
+            'total' => (int) ($row['total'] ?? 0),
+            'available' => (int) ($row['available'] ?? 0),
+            'borrowed' => (int) ($row['borrowed'] ?? 0),
+            'under_maintenance' => (int) ($row['underMaintenance'] ?? 0),
+            'lost' => (int) ($row['lost'] ?? 0),
+            'retired' => (int) ($row['retired'] ?? 0),
+        ];
     }
 }
