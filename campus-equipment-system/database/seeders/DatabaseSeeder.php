@@ -18,6 +18,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // The template's test account (kept as in the team template)
+        // User::factory(10)->create();
+
+        User::factory()->create([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ]);
+
         // The tickets below point at equipment rows, so those rows must exist first
         $this->call(PlaceholderEquipmentSeeder::class);
 
