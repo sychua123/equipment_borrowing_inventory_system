@@ -10,7 +10,7 @@ class OpenState extends BaseTicketState
 {
     public function name(): string
     {
-        return 'Open';
+        return 'open';
     }
 
     // Open -> In Progress

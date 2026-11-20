@@ -59,7 +59,7 @@ class TicketController extends Controller
     }
 
     /**
-     * Keyword search in title and description.
+     * Keyword search in subject (the title) and description.
      * SQL Injection defence: the keyword is a bound parameter ("?"), and the LIKE wildcards
      * % and _ inside it are escaped with "!", so a user cannot change the meaning of the query.
      */
@@ -68,7 +68,7 @@ class TicketController extends Controller
         $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $keyword).'%';
 
         $query->where(function (Builder $q) use ($pattern) {
-            $q->whereRaw("title LIKE ? ESCAPE '!'", [$pattern])
+            $q->whereRaw("subject LIKE ? ESCAPE '!'", [$pattern])
                 ->orWhereRaw("description LIKE ? ESCAPE '!'", [$pattern]);
         });
     }

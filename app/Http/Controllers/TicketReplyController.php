@@ -18,7 +18,8 @@ class TicketReplyController extends Controller
         AttachmentService $attachments,
         NotificationService $notifications,
     ): RedirectResponse {
-        $reply = $ticket->replies()->make(['body' => $request->validated('body')]);
+        // The form field is "body"; the template's column is "message"
+        $reply = $ticket->replies()->make(['message' => $request->validated('body')]);
         $reply->user()->associate($request->user());
         $reply->save();
 

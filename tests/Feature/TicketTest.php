@@ -15,16 +15,33 @@ class TicketTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(\Database\Seeders\PlaceholderEquipmentSeeder::class);
+    }
+
     // In the built-in fake data: 6 = PRJ-0001 (Available), 9 = PRJ-0004 (Retired)
+    // The form field is "title"; the tickets table stores it in the "subject" column.
     private function validTicket(array $overrides = []): array
     {
         return array_merge([
             'title' => 'Broken projector',
             'description' => 'No image on screen.',
             'category' => 'Fault',
-            'priority' => 'High',
+            'priority' => 'high',
             'equipment_id' => 6,
         ], $overrides);
+    }
+
+    // Saves a ticket straight into the database (no HTTP form), mapping "title" to "subject"
+    private function createTicket(User $owner, array $overrides = []): Ticket
+    {
+        $data = $this->validTicket($overrides);
+        $data['subject'] = $data['title'];
+        unset($data['title']);
+
+        return $owner->tickets()->create($data);
     }
 
     private function photo(string $name = 'photo.jpg'): UploadedFile
@@ -46,12 +63,12 @@ class TicketTest extends TestCase
 
         $this->assertDatabaseHas('tickets', [
             'user_id' => $user->id,
-            'title' => 'Broken projector',
+            'subject' => 'Broken projector',
             'equipment_id' => 6,
-            'status' => 'Open',
+            'status' => 'open',
         ]);
         // The Admin gets a bell notification
-        $this->assertDatabaseHas('ticket_notifications', ['user_id' => $admin->id, 'type' => 'new_ticket']);
+        $this->assertDatabaseHas('notifications', ['user_id' => $admin->id, 'notification_type' => 'new_ticket']);
     }
 
     public function test_fault_ticket_needs_equipment(): void
@@ -93,10 +110,14 @@ class TicketTest extends TestCase
             ->post('/tickets', $this->validTicket(['category' => 'Hacking']))
             ->assertSessionHasErrors('category');
 
+        $this->actingAs($user)
+            ->post('/tickets', $this->validTicket(['priority' => 'urgent']))
+            ->assertSessionHasErrors('priority');
+
         // A "status" or "user_id" sent by the browser must not be saved
         $other = User::factory()->create();
-        $this->actingAs($user)->post('/tickets', $this->validTicket(['status' => 'Closed', 'user_id' => $other->id]));
-        $this->assertDatabaseHas('tickets', ['user_id' => $user->id, 'status' => 'Open']);
+        $this->actingAs($user)->post('/tickets', $this->validTicket(['status' => 'closed', 'user_id' => $other->id]));
+        $this->assertDatabaseHas('tickets', ['user_id' => $user->id, 'status' => 'open']);
         $this->assertDatabaseMissing('tickets', ['user_id' => $other->id]);
     }
 
@@ -105,8 +126,8 @@ class TicketTest extends TestCase
         $alice = User::factory()->create();
         $bob = User::factory()->create();
         $admin = User::factory()->create(['role' => 'admin']);
-        $alice->tickets()->create($this->validTicket(['title' => 'Alice ticket']));
-        $bob->tickets()->create($this->validTicket(['title' => 'Bob ticket']));
+        $this->createTicket($alice, ['title' => 'Alice ticket']);
+        $this->createTicket($bob, ['title' => 'Bob ticket']);
 
         $this->actingAs($alice)->get('/tickets')->assertSee('Alice ticket')->assertDontSee('Bob ticket');
         $this->actingAs($admin)->get('/tickets')->assertSee('Alice ticket')->assertSee('Bob ticket');
@@ -117,7 +138,7 @@ class TicketTest extends TestCase
         $alice = User::factory()->create();
         $bob = User::factory()->create();
         $admin = User::factory()->create(['role' => 'admin']);
-        $ticket = $bob->tickets()->create($this->validTicket());
+        $ticket = $this->createTicket($bob);
 
         $this->actingAs($alice)->get("/tickets/{$ticket->id}")->assertForbidden();
         $this->actingAs($bob)->get("/tickets/{$ticket->id}")->assertOk()->assertSee('PRJ-0001');
@@ -127,7 +148,7 @@ class TicketTest extends TestCase
     public function test_retired_equipment_still_shows_on_an_old_ticket(): void
     {
         $user = User::factory()->create();
-        $ticket = $user->tickets()->create($this->validTicket(['equipment_id' => 9]));
+        $ticket = $this->createTicket($user, ['equipment_id' => 9]);
 
         $this->actingAs($user)->get("/tickets/{$ticket->id}")->assertSee('PRJ-0004')->assertSee('(retired)');
     }
@@ -135,7 +156,7 @@ class TicketTest extends TestCase
     public function test_description_is_escaped_in_the_detail_page(): void
     {
         $user = User::factory()->create();
-        $ticket = $user->tickets()->create($this->validTicket(['description' => '<script>alert(1)</script>']));
+        $ticket = $this->createTicket($user, ['description' => '<script>alert(1)</script>']);
 
         $this->actingAs($user)->get("/tickets/{$ticket->id}")
             ->assertDontSee('<script>alert(1)</script>', false);
@@ -146,8 +167,8 @@ class TicketTest extends TestCase
     public function test_list_can_be_filtered_and_searched(): void
     {
         $user = User::factory()->create();
-        $user->tickets()->create($this->validTicket(['title' => 'Projector lamp']));
-        $user->tickets()->create($this->validTicket(['title' => 'Counter hours', 'category' => 'General Feedback', 'equipment_id' => null]));
+        $this->createTicket($user, ['title' => 'Projector lamp']);
+        $this->createTicket($user, ['title' => 'Counter hours', 'category' => 'General Feedback', 'equipment_id' => null]);
 
         $this->actingAs($user)->get('/tickets?category=Fault')->assertSee('Projector lamp')->assertDontSee('Counter hours');
         $this->actingAs($user)->get('/tickets?q=counter')->assertSee('Counter hours')->assertDontSee('Projector lamp');
@@ -157,8 +178,8 @@ class TicketTest extends TestCase
     {
         $alice = User::factory()->create();
         $bob = User::factory()->create();
-        $alice->tickets()->create($this->validTicket(['title' => 'Alice ticket']));
-        $bob->tickets()->create($this->validTicket(['title' => 'Bob ticket']));
+        $this->createTicket($alice, ['title' => 'Alice ticket']);
+        $this->createTicket($bob, ['title' => 'Bob ticket']);
 
         // If the keyword were glued into the SQL, "OR 1=1" would show every ticket
         $this->actingAs($alice)->get('/tickets?q='.urlencode("' OR 1=1 --"))
@@ -193,7 +214,7 @@ class TicketTest extends TestCase
 
         $ticket = Ticket::first();
         $this->assertCount(2, $ticket->photos);
-        Storage::disk('local')->assertExists($ticket->photos[0]->path);
+        Storage::disk('local')->assertExists($ticket->photos[0]->file_path);
 
         $url = '/attachments/'.$ticket->photos[0]->id;
         $this->actingAs($owner)->get($url)->assertOk();
@@ -243,16 +264,16 @@ class TicketTest extends TestCase
             ]))
             ->assertSessionHasNoErrors();
 
-        $this->assertDatabaseHas('tickets', ['id' => $ticket->id, 'title' => 'Changed title']);
+        $this->assertDatabaseHas('tickets', ['id' => $ticket->id, 'subject' => 'Changed title']);
         $this->assertCount(3, $ticket->fresh()->photos);
-        Storage::disk('local')->assertMissing($oldPhoto->path);
+        Storage::disk('local')->assertMissing($oldPhoto->file_path);
     }
 
     public function test_ticket_cannot_be_edited_by_others_or_after_work_started(): void
     {
         $owner = User::factory()->create();
         $admin = User::factory()->create(['role' => 'admin']);
-        $ticket = $owner->tickets()->create($this->validTicket());
+        $ticket = $this->createTicket($owner);
 
         // Not the owner (even the Admin cannot rewrite a user's ticket)
         $this->actingAs($admin)->put("/tickets/{$ticket->id}", $this->validTicket(['title' => 'Hacked']))->assertForbidden();
@@ -262,6 +283,6 @@ class TicketTest extends TestCase
         $this->actingAs($owner)->get("/tickets/{$ticket->id}/edit")->assertForbidden();
         $this->actingAs($owner)->put("/tickets/{$ticket->id}", $this->validTicket(['title' => 'Too late']))->assertForbidden();
 
-        $this->assertDatabaseHas('tickets', ['id' => $ticket->id, 'title' => 'Broken projector']);
+        $this->assertDatabaseHas('tickets', ['id' => $ticket->id, 'subject' => 'Broken projector']);
     }
 }

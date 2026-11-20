@@ -12,19 +12,26 @@ class OpenFaultTicketApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(\Database\Seeders\PlaceholderEquipmentSeeder::class);
+    }
+
     private const KEY = ['X-API-KEY' => 'local-dev-key'];
 
     private function url(int|string $equipmentId, array $query = []): string
     {
         $query += ['requestID' => 'REQ-001', 'timeStamp' => '2026-11-15 10:00:00'];
 
-        return "/api/m4/equipment/{$equipmentId}/open-fault-tickets?".http_build_query($query);
+        return '/api/m4/equipment/'.rawurlencode((string) $equipmentId).'/open-fault-tickets?'.http_build_query($query);
     }
 
-    private function fault(int $equipmentId, string $status = 'Open', string $category = 'Fault'): void
+    // $status uses the stored values: open, in_progress, resolved or closed
+    private function fault(int $equipmentId, string $status = 'open', string $category = 'Fault'): void
     {
         $ticket = User::factory()->create()->tickets()->make([
-            'title' => 'Fault on '.$equipmentId, 'description' => 'x', 'category' => $category, 'priority' => 'High', 'equipment_id' => $equipmentId,
+            'subject' => 'Fault on '.$equipmentId, 'description' => 'x', 'category' => $category, 'priority' => 'high', 'equipment_id' => $equipmentId,
         ]);
         $ticket->status = $status;
         $ticket->save();
@@ -38,11 +45,11 @@ class OpenFaultTicketApiTest extends TestCase
 
     public function test_it_counts_only_open_fault_tickets_of_that_equipment(): void
     {
-        $this->fault(6, 'Open');
-        $this->fault(6, 'In Progress');
-        $this->fault(6, 'Resolved');                    // not counted: already solved
-        $this->fault(6, 'Open', 'Usage Problem');       // not counted: not a fault
-        $this->fault(7, 'Open');                        // not counted: other equipment
+        $this->fault(6, 'open');
+        $this->fault(6, 'in_progress');
+        $this->fault(6, 'resolved');                    // not counted: already solved
+        $this->fault(6, 'open', 'Usage Problem');       // not counted: not a fault
+        $this->fault(7, 'open');                        // not counted: other equipment
 
         $this->getJson($this->url(6), self::KEY)
             ->assertOk()

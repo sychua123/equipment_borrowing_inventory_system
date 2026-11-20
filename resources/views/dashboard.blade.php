@@ -12,9 +12,9 @@
       <tbody>
         @forelse ($waiting as $ticket)
           <tr>
-            <td><a href="{{ route('tickets.show', $ticket) }}">#{{ $ticket->id }} {{ $ticket->title }}</a></td>
-            <td>{{ $ticket->priority }}</td>
-            <td><span class="badge">{{ $ticket->status }}</span></td>
+            <td><a href="{{ route('tickets.show', $ticket) }}">#{{ $ticket->id }} {{ $ticket->subject }}</a></td>
+            <td>{{ \App\Models\Ticket::label($ticket->priority) }}</td>
+            <td><span class="badge">{{ \App\Models\Ticket::label($ticket->status) }}</span></td>
             <td>{{ $ticket->user->name }}</td>
             <td class="hint">{{ $ticket->created_at->diffForHumans() }}</td>
           </tr>

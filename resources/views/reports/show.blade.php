@@ -43,7 +43,7 @@
         <select name="status">
           <option value="">All</option>
           @foreach (array_keys(\App\Models\Ticket::STATES) as $status)
-            <option value="{{ $status }}" @selected($filter->status === $status)>{{ $status }}</option>
+            <option value="{{ $status }}" @selected($filter->status === $status)>{{ \App\Models\Ticket::label($status) }}</option>
           @endforeach
         </select>
       </label>
@@ -51,7 +51,7 @@
         <select name="priority">
           <option value="">All</option>
           @foreach (\App\Models\Ticket::PRIORITIES as $priority)
-            <option value="{{ $priority }}" @selected($filter->priority === $priority)>{{ $priority }}</option>
+            <option value="{{ $priority }}" @selected($filter->priority === $priority)>{{ \App\Models\Ticket::label($priority) }}</option>
           @endforeach
         </select>
       </label>

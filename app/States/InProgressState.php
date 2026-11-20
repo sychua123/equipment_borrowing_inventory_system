@@ -10,7 +10,7 @@ class InProgressState extends BaseTicketState
 {
     public function name(): string
     {
-        return 'In Progress';
+        return 'in_progress';
     }
 
     // In Progress -> Resolved

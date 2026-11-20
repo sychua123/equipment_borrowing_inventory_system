@@ -30,13 +30,14 @@ class TicketReport implements Report
 
         $report->summary = [
             'Tickets submitted' => array_sum($byStatus),
-            'Still open or in progress' => $byStatus['Open'] + $byStatus['In Progress'],
+            'Still open or in progress' => $byStatus['open'] + $byStatus['in_progress'],
             'Average handling time' => $averageHours === null ? 'n/a' : $this->formatHours($averageHours),
         ];
 
         $report->addSection('Tickets by status', ['Status', 'Tickets'], $this->pairs($byStatus));
         $report->addSection('Tickets by category', ['Category', 'Tickets'], $this->pairs($byCategory));
         $report->addSection('Tickets by priority', ['Priority', 'Tickets'], $this->pairs($byPriority));
+        // (pairs() shows each stored value with Ticket::label, e.g. "in_progress" -> "In Progress")
         $report->addSection('Equipment with the most faults (top 10)', ['Equipment', 'Fault tickets'], $this->faultyEquipment($filter));
 
         // Titles a user typed are listed too, so the CSV export must make them safe (see CsvExporter)
@@ -44,11 +45,19 @@ class TicketReport implements Report
             'Tickets in this period',
             ['#', 'Title', 'Category', 'Priority', 'Status', 'Submitted by', 'Submitted'],
             $this->filtered($filter)->with('user')->latest()->limit(200)->get()
-                ->map(fn (Ticket $t) => [$t->id, $t->title, $t->category, $t->priority, $t->status, $t->user->name, $t->created_at->format('Y-m-d H:i')])
+                ->map(fn (Ticket $t) => [
+                    $t->id,
+                    $t->subject,
+                    $t->category,
+                    Ticket::label($t->priority),
+                    Ticket::label($t->status),
+                    $t->user->name,
+                    $t->created_at->format('Y-m-d H:i'),
+                ])
                 ->all(),
         );
 
-        $report->addChart('doughnut', 'Tickets by status', array_keys($byStatus), $byStatus);
+        $report->addChart('doughnut', 'Tickets by status', array_map([Ticket::class, 'label'], array_keys($byStatus)), $byStatus);
         $report->addChart('bar', 'Tickets by category', array_keys($byCategory), $byCategory);
 
         return $report;
@@ -115,7 +124,9 @@ class TicketReport implements Report
 
     private function pairs(array $counts): array
     {
-        return array_map(null, array_keys($counts), array_values($counts));
+        $labels = array_map([Ticket::class, 'label'], array_keys($counts));
+
+        return array_map(null, $labels, array_values($counts));
     }
 
     private function formatHours(float $hours): string

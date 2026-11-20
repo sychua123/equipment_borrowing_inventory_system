@@ -35,12 +35,12 @@ class DashboardController extends Controller
             ],
             // Tickets the Admin still has to handle, oldest first
             'waiting' => Ticket::query()
-                ->whereIn('status', ['Open', 'In Progress'])
+                ->whereIn('status', ['open', 'in_progress'])
                 ->with('user')
                 ->oldest()
                 ->limit(5)
                 ->get(),
-            'waitingTotal' => Ticket::query()->whereIn('status', ['Open', 'In Progress'])->count(),
+            'waitingTotal' => Ticket::query()->whereIn('status', ['open', 'in_progress'])->count(),
         ]);
     }
 }

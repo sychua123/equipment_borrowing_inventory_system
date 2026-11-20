@@ -37,6 +37,6 @@ class TicketStatusController extends Controller
 
         $notifications->statusChanged($ticket, $request->user());
 
-        return redirect()->route('tickets.show', $ticket)->with('success', "The ticket is now {$ticket->status}.");
+        return redirect()->route('tickets.show', $ticket)->with('success', 'The ticket is now '.Ticket::label($ticket->status).'.');
     }
 }

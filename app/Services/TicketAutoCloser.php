@@ -19,7 +19,7 @@ class TicketAutoCloser
         $deadline = now()->subDays(config('module4.auto_close_days'));
 
         $expired = Ticket::query()
-            ->where('status', 'Resolved')
+            ->where('status', 'resolved')
             ->where('resolved_at', '<=', $deadline)
             ->get();
 

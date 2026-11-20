@@ -6,7 +6,7 @@
 @endif
 
 <label>Title
-  <input name="title" maxlength="120" required value="{{ old('title', $ticket->title) }}">
+  <input name="title" maxlength="120" required value="{{ old('title', $ticket->subject) }}">
   @error('title') <small class="error">{{ $message }}</small> @enderror
 </label>
 
@@ -35,7 +35,7 @@
 <label>Priority
   <select name="priority" required>
     @foreach (\App\Models\Ticket::PRIORITIES as $priority)
-      <option value="{{ $priority }}" @selected(old('priority', $ticket->priority ?? 'Medium') === $priority)>{{ $priority }}</option>
+      <option value="{{ $priority }}" @selected(old('priority', $ticket->priority ?? 'medium') === $priority)>{{ \App\Models\Ticket::label($priority) }}</option>
     @endforeach
   </select>
   @error('priority') <small class="error">{{ $message }}</small> @enderror
@@ -52,7 +52,7 @@
   <div class="photos">
     @foreach ($ticket->photos as $photo)
       <label class="inline">
-        <img src="{{ route('attachments.show', $photo) }}" alt="{{ $photo->original_name }}"><br>
+        <img src="{{ route('attachments.show', $photo) }}" alt="{{ $photo->file_name }}"><br>
         <input type="checkbox" name="remove_photos[]" value="{{ $photo->id }}" @checked(in_array($photo->id, (array) old('remove_photos', [])))>
         Remove
       </label>

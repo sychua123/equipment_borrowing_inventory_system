@@ -56,7 +56,7 @@
 
       {{-- The bell: how many notifications this user has not read yet --}}
       @php
-        $unreadCount = auth()->user()->ticketNotifications()->whereNull('read_at')->count();
+        $unreadCount = auth()->user()->ticketNotifications()->where('is_read', false)->count();
       @endphp
       <a href="{{ route('notifications.index') }}">Notifications
         @if ($unreadCount > 0) <span class="count">{{ $unreadCount }}</span> @endif

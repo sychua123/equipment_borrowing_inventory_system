@@ -17,9 +17,9 @@ class AttachmentController extends Controller
         // Whoever may view the ticket may view its photos
         Gate::authorize('view', $attachment->ticket);
 
-        abort_unless(Storage::disk('local')->exists($attachment->path), 404);
+        abort_unless(Storage::disk('local')->exists($attachment->file_path), 404);
 
-        return Storage::disk('local')->response($attachment->path, null, [
+        return Storage::disk('local')->response($attachment->file_path, null, [
             'Content-Type' => $attachment->mime_type,
             // Tell the browser not to guess a different file type
             'X-Content-Type-Options' => 'nosniff',

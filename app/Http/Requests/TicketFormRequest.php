@@ -63,6 +63,12 @@ abstract class TicketFormRequest extends FormRequest
     // Only these fields are saved into the tickets table
     public function ticketData(): array
     {
-        return $this->safe()->only(['title', 'description', 'category', 'priority', 'equipment_id']);
+        $data = $this->safe()->only(['title', 'description', 'category', 'priority', 'equipment_id']);
+
+        // The form field is "title"; the template's column is "subject"
+        $data['subject'] = $data['title'];
+        unset($data['title']);
+
+        return $data;
     }
 }

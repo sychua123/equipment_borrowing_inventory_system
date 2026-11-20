@@ -1,6 +1,7 @@
 <?php
 // Author: Lai Chee Kit
-// Module 4: Support Ticket
+// Module 4: Support Ticket. Uses the template's "tickets" table (+ category and closed_at from
+// 2026_11_20_000001). Status and priority are the template's lowercase enum values.
 
 namespace App\Models;
 
@@ -18,14 +19,14 @@ class Ticket extends Model
 {
     // The allowed values, kept in one place so controllers, requests and views share them
     public const CATEGORIES = ['Fault', 'Usage Problem', 'General Feedback'];
-    public const PRIORITIES = ['Low', 'Medium', 'High'];
+    public const PRIORITIES = ['low', 'medium', 'high'];
 
-    // State Pattern: each status name is handled by one state class
+    // State Pattern: each stored status value is handled by one state class
     public const STATES = [
-        'Open' => OpenState::class,
-        'In Progress' => InProgressState::class,
-        'Resolved' => ResolvedState::class,
-        'Closed' => ClosedState::class,
+        'open' => OpenState::class,
+        'in_progress' => InProgressState::class,
+        'resolved' => ResolvedState::class,
+        'closed' => ClosedState::class,
     ];
 
     // "status" is not here on purpose: only the state classes may change it
@@ -33,13 +34,13 @@ class Ticket extends Model
         'equipment_id',
         'category',
         'priority',
-        'title',
+        'subject',
         'description',
     ];
 
-    // A new ticket is always Open
+    // A new ticket is always open
     protected $attributes = [
-        'status' => 'Open',
+        'status' => 'open',
     ];
 
     protected function casts(): array
@@ -48,6 +49,12 @@ class Ticket extends Model
             'resolved_at' => 'datetime',
             'closed_at' => 'datetime',
         ];
+    }
+
+    // Shows a stored value such as "in_progress" as "In Progress" (for screens and messages)
+    public static function label(?string $value): string
+    {
+        return ucwords(str_replace('_', ' ', (string) $value));
     }
 
     // ---------- Relationships ----------
@@ -100,6 +107,6 @@ class Ticket extends Model
     // "Open fault" = a Fault ticket that is not Resolved or Closed yet
     public function scopeOpenFaults(Builder $query): void
     {
-        $query->where('category', 'Fault')->whereIn('status', ['Open', 'In Progress']);
+        $query->where('category', 'Fault')->whereIn('status', ['open', 'in_progress']);
     }
 }

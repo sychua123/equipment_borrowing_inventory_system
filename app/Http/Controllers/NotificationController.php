@@ -25,8 +25,7 @@ class NotificationController extends Controller
         abort_unless($notification->user_id === $request->user()->id, 403);
 
         if ($notification->isUnread()) {
-            $notification->read_at = now();
-            $notification->save();
+            $notification->markAsRead();
         }
 
         return redirect()->route('tickets.show', $notification->ticket_id);
@@ -34,7 +33,7 @@ class NotificationController extends Controller
 
     public function readAll(Request $request): RedirectResponse
     {
-        $request->user()->ticketNotifications()->whereNull('read_at')->update(['read_at' => now()]);
+        $request->user()->ticketNotifications()->where('is_read', false)->update(['is_read' => true, 'read_at' => now()]);
 
         return redirect()->route('notifications.index')->with('success', 'All notifications were marked as read.');
     }

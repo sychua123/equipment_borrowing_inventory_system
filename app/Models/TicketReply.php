@@ -1,6 +1,7 @@
 <?php
 // Author: Lai Chee Kit
 // Module 4: one reply on a ticket. Replies are never edited or deleted.
+// Uses the template's "ticket_replies" table (the text is the template's "message" column).
 
 namespace App\Models;
 
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TicketReply extends Model
 {
-    protected $fillable = ['body'];
+    protected $fillable = ['message'];
 
     public function ticket(): BelongsTo
     {
@@ -25,6 +26,6 @@ class TicketReply extends Model
 
     public function photos(): HasMany
     {
-        return $this->hasMany(TicketAttachment::class);
+        return $this->hasMany(TicketAttachment::class, 'ticket_reply_id');
     }
 }

@@ -10,7 +10,7 @@ class ResolvedState extends BaseTicketState
 {
     public function name(): string
     {
-        return 'Resolved';
+        return 'resolved';
     }
 
     // Resolved -> Closed (the submitter confirms, or 7 days pass)

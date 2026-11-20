@@ -23,17 +23,19 @@ class AttachmentService
 
             $ticket->photos()->create([
                 'ticket_reply_id' => $reply?->id,
-                'path' => $path,
-                'original_name' => $file->getClientOriginalName(),
+                // The template's column is "uploaded_by" (NOT NULL): the logged-in user uploads the photo
+                'uploaded_by' => auth()->id(),
+                'file_path' => $path,
+                'file_name' => $file->getClientOriginalName(),
                 'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize(),
+                'file_size' => $file->getSize(),
             ]);
         }
     }
 
     public function delete(TicketAttachment $attachment): void
     {
-        Storage::disk('local')->delete($attachment->path);
+        Storage::disk('local')->delete($attachment->file_path);
         $attachment->delete();
     }
 }

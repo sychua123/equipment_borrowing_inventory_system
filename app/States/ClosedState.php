@@ -11,7 +11,7 @@ class ClosedState extends BaseTicketState
 {
     public function name(): string
     {
-        return 'Closed';
+        return 'closed';
     }
 
     public function canReply(): bool

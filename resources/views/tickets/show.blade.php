@@ -15,12 +15,12 @@
 
 @section('content')
   <p><a href="{{ route('tickets.index') }}">← Back to tickets</a></p>
-  <h1>Ticket #{{ $ticket->id }}: {{ $ticket->title }}</h1>
+  <h1>Ticket #{{ $ticket->id }}: {{ $ticket->subject }}</h1>
 
   <dl>
-    <dt>Status</dt>       <dd><span class="badge">{{ $ticket->status }}</span></dd>
+    <dt>Status</dt>       <dd><span class="badge">{{ \App\Models\Ticket::label($ticket->status) }}</span></dd>
     <dt>Category</dt>     <dd>{{ $ticket->category }}</dd>
-    <dt>Priority</dt>     <dd>{{ $ticket->priority }}</dd>
+    <dt>Priority</dt>     <dd>{{ \App\Models\Ticket::label($ticket->priority) }}</dd>
     <dt>Equipment</dt>    <dd>{{ $equipmentLabel }}</dd>
     <dt>Submitted by</dt> <dd>{{ $ticket->user->name }}</dd>
     <dt>Submitted</dt>    <dd>{{ $ticket->created_at->format('d M Y, H:i') }}</dd>
@@ -37,13 +37,13 @@
     <div class="photos">
       @foreach ($ticket->photos as $photo)
         <a href="{{ route('attachments.show', $photo) }}" target="_blank" rel="noopener">
-          <img src="{{ route('attachments.show', $photo) }}" alt="{{ $photo->original_name }}">
+          <img src="{{ route('attachments.show', $photo) }}" alt="{{ $photo->file_name }}">
         </a>
       @endforeach
     </div>
   @endif
 
-  @if ($ticket->status === 'Resolved' && $ticket->user_id === auth()->id())
+  @if ($ticket->status === 'resolved' && $ticket->user_id === auth()->id())
     <p class="hint">Is the problem solved? This ticket closes by itself {{ config('module4.auto_close_days') }} days after it was resolved.</p>
   @endif
 
@@ -66,12 +66,12 @@
   @forelse ($ticket->replies as $reply)
     <div class="reply">
       <p class="hint">{{ $reply->user->name }} ({{ ucfirst($reply->user->role) }}) · {{ $reply->created_at->format('d M Y, H:i') }}</p>
-      <p class="desc">{{ $reply->body }}</p>
+      <p class="desc">{{ $reply->message }}</p>
       @if ($reply->photos->isNotEmpty())
         <div class="photos">
           @foreach ($reply->photos as $photo)
             <a href="{{ route('attachments.show', $photo) }}" target="_blank" rel="noopener">
-              <img src="{{ route('attachments.show', $photo) }}" alt="{{ $photo->original_name }}">
+              <img src="{{ route('attachments.show', $photo) }}" alt="{{ $photo->file_name }}">
             </a>
           @endforeach
         </div>

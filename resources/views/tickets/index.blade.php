@@ -18,7 +18,7 @@
       <select name="status">
         <option value="">Any</option>
         @foreach (array_keys(\App\Models\Ticket::STATES) as $status)
-          <option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>{{ $status }}</option>
+          <option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>{{ \App\Models\Ticket::label($status) }}</option>
         @endforeach
       </select>
     </label>
@@ -34,7 +34,7 @@
       <select name="priority">
         <option value="">Any</option>
         @foreach (\App\Models\Ticket::PRIORITIES as $priority)
-          <option value="{{ $priority }}" @selected(($filters['priority'] ?? '') === $priority)>{{ $priority }}</option>
+          <option value="{{ $priority }}" @selected(($filters['priority'] ?? '') === $priority)>{{ \App\Models\Ticket::label($priority) }}</option>
         @endforeach
       </select>
     </label>
@@ -67,11 +67,11 @@
         @forelse ($tickets as $ticket)
           <tr>
             <td>{{ $ticket->id }}</td>
-            <td><a href="{{ route('tickets.show', $ticket) }}">{{ $ticket->title }}</a></td>
+            <td><a href="{{ route('tickets.show', $ticket) }}">{{ $ticket->subject }}</a></td>
             <td>{{ $ticket->category }}</td>
             <td>{{ $ticket->equipment_id ? $equipment->label($ticket->equipment_id) : '-' }}</td>
-            <td>{{ $ticket->priority }}</td>
-            <td><span class="badge">{{ $ticket->status }}</span></td>
+            <td>{{ \App\Models\Ticket::label($ticket->priority) }}</td>
+            <td><span class="badge">{{ \App\Models\Ticket::label($ticket->status) }}</span></td>
             @if (auth()->user()->isAdmin()) <td>{{ $ticket->user->name }}</td> @endif
             <td>{{ $ticket->created_at->format('d M Y, H:i') }}</td>
           </tr>

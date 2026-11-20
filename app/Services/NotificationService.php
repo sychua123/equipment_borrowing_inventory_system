@@ -13,10 +13,17 @@ use Illuminate\Support\Collection;
 
 class NotificationService
 {
+    // The short title shown in the notification list, for each notification type
+    private const TITLES = [
+        'new_ticket' => 'New ticket',
+        'new_reply' => 'New reply',
+        'status_changed' => 'Status changed',
+    ];
+
     // New ticket -> tell every Admin
     public function ticketSubmitted(Ticket $ticket): void
     {
-        $this->send($this->admins(), $ticket, 'new_ticket', "New ticket #{$ticket->id}: {$ticket->title}");
+        $this->send($this->admins(), $ticket, 'new_ticket', "New ticket #{$ticket->id}: {$ticket->subject}");
     }
 
     // New reply -> tell the other side
@@ -34,11 +41,13 @@ class NotificationService
     // Status change -> tell the other side. $actor is null when the system auto-closed the ticket.
     public function statusChanged(Ticket $ticket, ?User $actor): void
     {
+        $status = Ticket::label($ticket->status);
+
         if ($actor !== null && $actor->id === $ticket->user_id) {
-            $this->send($this->admins(), $ticket, 'status_changed', "Ticket #{$ticket->id} was changed to {$ticket->status} by {$actor->name}");
+            $this->send($this->admins(), $ticket, 'status_changed', "Ticket #{$ticket->id} was changed to {$status} by {$actor->name}");
         } else {
             $how = $actor === null ? ' automatically' : '';
-            $this->send([$ticket->user], $ticket, 'status_changed', "Your ticket #{$ticket->id} was changed to {$ticket->status}{$how}");
+            $this->send([$ticket->user], $ticket, 'status_changed', "Your ticket #{$ticket->id} was changed to {$status}{$how}");
         }
     }
 
@@ -54,8 +63,10 @@ class NotificationService
             Notification::create([
                 'user_id' => $user->id,
                 'ticket_id' => $ticket->id,
-                'type' => $type,
+                'title' => self::TITLES[$type],
                 'message' => $message,
+                'notification_type' => $type,
+                'is_read' => false,
             ]);
         }
     }

@@ -52,7 +52,8 @@ class OpenFaultTicketController extends Controller
                 'tickets' => $openFaults->latest()->limit(5)->get()
                     ->map(fn (Ticket $ticket) => [
                         'ticketID' => $ticket->id,
-                        'title' => $ticket->title,
+                        // The API field name stays "title" (Module 1 reads it); the column is "subject"
+                        'title' => $ticket->subject,
                         'priority' => $ticket->priority,
                         'status' => $ticket->status,
                         'submittedAt' => $ticket->created_at->format(Ifa::TIME_FORMAT),
