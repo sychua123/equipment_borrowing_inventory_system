@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Asia/Kuala_Lumpur'),   // Module 4 (Lai Chee Kit): Malaysia time, so ticket times and API timeStamp are local
 
     /*
     |--------------------------------------------------------------------------
