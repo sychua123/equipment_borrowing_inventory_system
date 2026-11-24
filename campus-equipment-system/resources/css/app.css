@@ -1,3 +1,6 @@
+/* Module 4 (Lai Chee Kit): ticket, report and notification page styles, scoped under .m4 */
+@import './module4.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

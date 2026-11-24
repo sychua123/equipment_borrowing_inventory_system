@@ -132,6 +132,25 @@ class User extends Authenticatable
         return $this->hasMany(TicketAttachment::class, 'uploaded_by');
     }
 
+    // ===== Module 4 (Lai Chee Kit) =====
+    // Support tickets submitted by this user (same rows as createdTickets())
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class, 'user_id');
+    }
+
+    // Bell notifications of this user for Module 4, newest first
+    public function ticketNotifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id')->latest();
+    }
+
+    // Admin = Inventory Officer
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
     // Equipment status history
     public function equipmentStatusHistories()
     {

@@ -1,0 +1,36 @@
+/* Module 4 (Lai Chee Kit): styles for the ticket, report and notification pages.
+   Every rule sits under .m4 so the template's own pages are not affected. */
+
+.m4 h2 { margin-top: 36px; font-size: 1.5rem; font-weight: 600; }
+.m4 a { color: #1764c0; }
+.m4 table { width: 100%; border-collapse: collapse; }
+.m4 th, .m4 td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #ddd; vertical-align: top; }
+.m4 label { display: block; margin: 18px 0; }
+.m4 input, .m4 select, .m4 textarea { display: block; box-sizing: border-box; padding: 10px; width: 100%; font: inherit; }
+.m4 input[type=checkbox] { display: inline; width: auto; }
+.m4 button, .m4 .button { padding: 10px 16px; cursor: pointer; font: inherit; }
+.m4 a.button { display: inline-block; border: 1px solid #888; border-radius: 4px; text-decoration: none; background: #f3f3f3; color: #1c2430; }
+.m4 .good { color: #146c43; }
+.m4 .error { color: #a21a1a; }
+.m4 .warn { background: #fff4d6; border: 1px solid #e0b84a; padding: 10px 14px; border-radius: 6px; }
+.m4 .hint { color: #666; font-size: 14px; }
+.m4 .badge { display: inline-block; padding: 2px 8px; border: 1px solid #999; border-radius: 10px; font-size: 13px; white-space: nowrap; }
+.m4 .count { background: #c0271d; color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 13px; }
+.m4 dl { display: grid; grid-template-columns: 140px 1fr; gap: 8px 16px; }
+.m4 dt { color: #555; }
+.m4 dd { margin: 0; }
+.m4 .desc { white-space: pre-wrap; overflow-wrap: anywhere; }
+.m4 .table-wrap { overflow-x: auto; }
+.m4 .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin: 16px 0; }
+.m4 .filters label { margin: 0; flex: 1 1 150px; font-size: 14px; }
+.m4 .inline { display: inline-block; margin: 0 8px 8px 0; }
+.m4 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
+.m4 .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px 14px; }
+.m4 .card b { display: block; font-size: 26px; }
+.m4 .panel { border: 1px solid #ddd; border-radius: 8px; padding: 4px 18px 18px; margin: 20px 0; }
+.m4 .chart { max-width: 560px; margin: 16px 0; }
+.m4 .reply { border-left: 3px solid #ccd; padding: 4px 14px; margin: 16px 0; }
+.m4 .photos img { max-width: 180px; max-height: 140px; border: 1px solid #ccc; margin: 4px 8px 4px 0; }
+.m4 .unread { font-weight: 600; }
+.m4 .tabs a { margin-right: 14px; }
+.m4 .tabs a.current { font-weight: 700; text-decoration: none; color: #1c2430; }

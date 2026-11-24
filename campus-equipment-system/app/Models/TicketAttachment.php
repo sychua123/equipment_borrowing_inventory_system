@@ -1,46 +1,31 @@
 <?php
+// Author: Lai Chee Kit
+// Module 4: one photo attached to a ticket or to a reply.
+// Uses the template's "ticket_attachments" table, which has no updated_at column.
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TicketAttachment extends Model
 {
-
-    protected $table = 'ticket_attachments';
-
     public const UPDATED_AT = null;
 
-    protected $fillable = [
-        'ticket_id',
-        'ticket_reply_id',
-        'uploaded_by',
-        'file_name',
-        'file_path',
-        'mime_type',
-        'file_size',
-    ];
+    protected $fillable = ['ticket_id', 'ticket_reply_id', 'uploaded_by', 'file_name', 'file_path', 'mime_type', 'file_size'];
 
-    protected function casts(): array
+    public function ticket(): BelongsTo
     {
-        return [
-            'created_at' => 'datetime',
-        ];
+        return $this->belongsTo(Ticket::class);
     }
 
-    public function ticketReply()
+    public function reply(): BelongsTo
     {
-        return $this->belongsTo(TicketReply::class, 'ticket_reply_id', 'id');
+        return $this->belongsTo(TicketReply::class, 'ticket_reply_id');
     }
 
-    public function ticket()
+    public function uploadedBy(): BelongsTo
     {
-        return $this->belongsTo(Ticket::class, 'ticket_id', 'id');
+        return $this->belongsTo(User::class, 'uploaded_by');
     }
-
-    public function uploadedBy()
-    {
-        return $this->belongsTo(User::class, 'uploaded_by', 'id');
-    }
-
 }
