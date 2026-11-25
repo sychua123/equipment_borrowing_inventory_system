@@ -166,8 +166,9 @@ class User extends Authenticatable
         $this->increment('failed_login_attempts');
 
         if ($this->failed_login_attempts >= self::MAX_FAILED_ATTEMPTS) {
-            $this->locked_until = now()->addMinutes(self::LOCK_MINUTES);
-            $this->save();
+            $this->forceFill([
+                'locked_until' => now()->addMinutes(self::LOCK_MINUTES),
+            ])->save();
         }
     }
 
