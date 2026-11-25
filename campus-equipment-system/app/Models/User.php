@@ -32,6 +32,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'locked_until' => 'datetime',
+            'failed_login_attempts' => 'integer',
         ];
     }
 
@@ -149,6 +151,31 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public const MAX_FAILED_ATTEMPTS = 5;
+    public const LOCK_MINUTES = 15;
+
+    public function isLocked(): bool
+    {
+        return $this->locked_until !== null && $this->locked_until->isFuture();
+    }
+
+    public function registerFailedLogin(): void
+    {
+        $this->increment('failed_login_attempts');
+
+        if ($this->failed_login_attempts >= self::MAX_FAILED_ATTEMPTS) {
+            $this->locked_until = now()->addMinutes(self::LOCK_MINUTES);
+            $this->save();
+        }
+    }
+
+    public function clearFailedLogins(): void
+    {
+        $this->failed_login_attempts = 0;
+        $this->locked_until = null;
+        $this->save();
     }
 
     // Equipment status history
