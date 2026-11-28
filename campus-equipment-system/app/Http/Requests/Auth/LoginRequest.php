@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -40,17 +41,42 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
+        $user = User::where('email', $this->input('email'))->first();
+
+        // 1. Account lockout check (own implementation): runs first, so the
+        //    password is never checked while the account is locked.
+        if ($user && $user->isLocked()) {
+            throw ValidationException::withMessages([
+                'email' => 'This account is temporarily locked due to too many failed login attempts. Please try again '
+                    . $user->locked_until->diffForHumans() . '.',
+            ]);
+        }
+
+        // 2. Breeze built-in rate limiting (same email + IP).
         $this->ensureIsNotRateLimited();
 
+        // 3. Verify the credentials.
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
+            $user?->registerFailedLogin();
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
         }
 
+        // 4. Correct password, but the account is not active: log out at once.
+        if (Auth::user()->account_status !== 'active') {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'This account is not active. Please contact the administrator.',
+            ]);
+        }
+
+        // 5. Successful login: clear the rate limiter and the failed attempts.
         RateLimiter::clear($this->throttleKey());
+        Auth::user()->clearFailedLogins();
     }
 
     /**

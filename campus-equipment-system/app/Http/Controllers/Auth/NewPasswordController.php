@@ -48,6 +48,8 @@ class NewPasswordController extends Controller
                     'remember_token' => Str::random(60),
                 ])->save();
 
+                $user->clearFailedLogins();
+
                 event(new PasswordReset($user));
             }
         );
